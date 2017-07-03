@@ -4,7 +4,7 @@
 
 'use strict';
 
-jest.mock('../fetchCurrentUser.js');
+jest.mock('../fetch_current_user.js');
 
 it('displays a user after a click', () => {
   // Set up our document body
@@ -15,10 +15,10 @@ it('displays a user after a click', () => {
     '</div>';
 
   // This module has a side-effect
-  require('../displayUser');
+  require('../display_user');
 
   const $ = require('jquery');
-  const fetchCurrentUser = require('../fetchCurrentUser');
+  const fetchCurrentUser = require('../fetch_current_user');
 
   // Tell the fetchCurrentUser mock function to automatically invoke
   // its callback with some data

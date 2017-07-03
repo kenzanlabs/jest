@@ -38,7 +38,7 @@ module.exports = {
         'babel/func-params-comma-dangle': 0,
         'import/no-unresolved': [2, {ignore: ['^react-native$']}],
         'import/order': 0,
-        'unicorn/filename-case': 0,
+        // 'unicorn/filename-case': 0,
       },
     },
     {

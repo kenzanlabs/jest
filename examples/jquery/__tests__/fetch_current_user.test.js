@@ -6,7 +6,7 @@ beforeEach(() => jest.resetModules());
 
 it('calls into $.ajax with the correct params', () => {
   const $ = require('jquery');
-  const fetchCurrentUser = require('../fetchCurrentUser');
+  const fetchCurrentUser = require('../fetch_current_user');
 
   // Call into the function we want to test
   const dummyCallback = () => {};
@@ -23,7 +23,7 @@ it('calls into $.ajax with the correct params', () => {
 
 it('calls the callback when $.ajax requests are finished', () => {
   const $ = require('jquery');
-  const fetchCurrentUser = require('../fetchCurrentUser');
+  const fetchCurrentUser = require('../fetch_current_user');
 
   // Create a mock function for our callback
   const callback = jest.fn();
