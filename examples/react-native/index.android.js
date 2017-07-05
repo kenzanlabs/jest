@@ -4,9 +4,9 @@
  * @flow
  */
 
-import Intro from './Intro';
-import React, {AppRegistry} from 'react-native';
-import {Component} from 'react';
+import Intro from './intro';
+import React, {Component} from 'react';
+import {AppRegistry} from 'react-native';
 
 class App extends Component {
   render() {

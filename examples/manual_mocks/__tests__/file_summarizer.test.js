@@ -16,7 +16,7 @@ describe('listFilesInDirectorySync', () => {
   });
 
   it('includes all files in the directory in the summary', () => {
-    const FileSummarizer = require('../FileSummarizer');
+    const FileSummarizer = require('../file_summarizer');
     const fileSummary = FileSummarizer.summarizeFilesInDirectorySync(
       '/path/to'
     );
