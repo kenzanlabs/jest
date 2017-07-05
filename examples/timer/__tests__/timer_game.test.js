@@ -6,7 +6,7 @@ jest.useFakeTimers();
 
 describe('timerGame', () => {
   it('waits 1 second before ending the game', () => {
-    const timerGame = require('../timerGame');
+    const timerGame = require('../timer_game');
     timerGame();
 
     expect(setTimeout.mock.calls.length).toBe(1);
@@ -14,7 +14,7 @@ describe('timerGame', () => {
   });
 
   it('calls the callback after 1 second via runAllTimers', () => {
-    const timerGame = require('../timerGame');
+    const timerGame = require('../timer_game');
     const callback = jest.fn();
 
     timerGame(callback);
@@ -31,7 +31,7 @@ describe('timerGame', () => {
   });
 
   it('calls the callback after 1 second via runTimersToTime', () => {
-    const timerGame = require('../timerGame');
+    const timerGame = require('../timer_game');
     const callback = jest.fn();
 
     timerGame(callback);
