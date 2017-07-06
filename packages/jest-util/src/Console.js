@@ -8,6 +8,7 @@
  * @flow
  */
 /* global stream$Writable */
+/* global tty$WriteStream */
 
 import type {LogType, LogMessage} from 'types/Console';
 
@@ -20,9 +21,9 @@ type Formatter = (type: LogType, message: LogMessage) => string;
 class CustomConsole extends Console {
   _stdout: stream$Writable;
   _formatBuffer: Formatter;
-  _groupLevel: int;
+  _groupLevel: number;
   _counts: Object;
-  _outWidth: int;
+  _outWidth: number;
 
   constructor(
     stdout: stream$Writable,
@@ -33,23 +34,38 @@ class CustomConsole extends Console {
     this._formatBuffer = formatBuffer || ((type, message) => message);
     this._groupLevel = 0;
     this._counts = {};
-    this._outWidth = stdout.columns;
+
+    // If we can find the width of the console, do so. Default to 80. This
+    // value is used to calculate the table width.
+    this._outWidth = 80;
+    if (stdout instanceof tty$WriteStream) {
+      this._outWidth = (stdout: tty$WriteStream).columns;
+    }
+  }
+
+  _generateIndentation() {
+    return '> '.repeat(this._groupLevel);
   }
 
   _log(type: LogType, message: string) {
     clearLine(this._stdout);
-    const groupIndentation = ' > '.repeat(this._groupLevel);
-    super.log(`${groupIndentation}${this._formatBuffer(type, message)}`);
+    super.log(
+      `${this._generateIndentation()}${this._formatBuffer(type, message)}`,
+    );
   }
 
-  assert(assertion: boolean, ...args: Array<mixed>) {
-    if (assertion) {this.log(...args);}
+  assert(assertion: mixed, ...args: Array<mixed>) {
+    if (!assertion) {
+      this.log(...args);
+    }
   }
 
   clear() {}
 
-  count(label: ?string = '<no label>') {
-    if (!this._counts[label]) {this._counts[label] = 0;}
+  count(label: string = '<no label>') {
+    if (!this._counts[label]) {
+      this._counts[label] = 0;
+    }
     this._counts[label]++;
     this._log('log', `${label}: ${this._counts[label]}`);
   }
@@ -58,9 +74,15 @@ class CustomConsole extends Console {
     this._log('error', format.apply(null, arguments));
   }
 
+  exception(...args: Array<mixed>) {
+    this.error(...args);
+  }
+
   group(label: ?string) {
     this._groupLevel++;
-    if (label) {this.log(label);}
+    if (label) {
+      this.log(label);
+    }
   }
 
   groupCollapsed() {
@@ -75,35 +97,43 @@ class CustomConsole extends Console {
     this._log('info', format.apply(null, arguments));
   }
 
-  table(data: ?object, columns: ?Array<mixed>) {
-    if (typeof data !== 'object') {return;}
+  log(...args: Array<mixed>) {
+    this._log('log', format.apply(null, arguments));
+  }
+
+  table(data: ?any, columns: ?Array<mixed>) {
+    if (!data || typeof data !== 'object') {
+      return;
+    }
 
     // Right pad a string to match the given width or truncate it if it is too
     // long.
-    const pad = (data: string, width: int) => {
-      if (data.length > width) {
-        return data.substring(0, width);
+    const pad = (str: string, width: number) => {
+      if (str.length > width) {
+        return str.substring(0, width);
       }
-      return data + ' '.repeat(width - data.toString().length);
+      return str + ' '.repeat(width - str.toString().length);
     };
 
     // Find the maximum value of an array using the given evaluator.
-    const max = (arr: array, evaluator: Function) => {
-      let maxEval = null;
+    const max = (arr: Array<any>, evaluator: (el: any) => number): number => {
+      let maxEval = -Infinity;
       for (const el of arr) {
         const evaluatedValue = evaluator(el);
-        maxEval = maxEval === null ? evaluatedValue :
-          Math.max(maxEval, evaluatedValue);
+        maxEval = maxEval === null
+          ? evaluatedValue
+          : Math.max(maxEval, evaluatedValue);
       }
       return maxEval;
     };
 
     // Converts any data to a readable string
-    const stringify = value => JSON.stringify(value).replace(/\n/g, '');
+    const stringify = (value): string =>
+      JSON.stringify(value).replace(/\n/g, '');
 
     // Determine the maximum length of the keys and values on the object
-    const keys = Object.keys(data);
-    const maxKeyLen = max(keys, el => stringify(el).length);
+    const keys: Array<string> = Object.keys(data) || [];
+    const maxKeyLen = max(keys, el => el.toString().length);
     const maxValueWidth = max(Object.values(data), el => stringify(el).length);
 
     let keyWidth = Math.max(maxKeyLen, '(index)'.length);
@@ -112,7 +142,11 @@ class CustomConsole extends Console {
 
     // Make the table fit in the width of the window
     while (totalTableWidth > this._outWidth) {
-      if (valueWidth > keyWidth) {valueWidth--;} else {keyWidth--;}
+      if (valueWidth > keyWidth) {
+        valueWidth--;
+      } else {
+        keyWidth--;
+      }
       totalTableWidth = keyWidth + valueWidth + 7;
     }
 
@@ -122,16 +156,14 @@ class CustomConsole extends Console {
     // Draw the actual table
     this.log('_'.repeat(totalTableWidth));
     this.log(`| ${keyHeader} | ${valueHeader} |`);
-    this.log('-'.repeat(totalTableWidth));
-    for (const key of keys) {
+    this.log(`|${'-'.repeat(keyWidth + 2)}|${'-'.repeat(valueWidth + 2)}|`);
+    for (const key: string of keys) {
       const value = stringify(data[key]);
-      this.log(`| ${pad(key, keyWidth)} | ${pad(value, valueWidth)} |`);
+      this.log(
+        `| ${pad(key.toString(), keyWidth)} | ${pad(value, valueWidth)} |`,
+      );
     }
     this.log('‾'.repeat(totalTableWidth));
-  }
-
-  log(...args: Array<mixed>) {
-    this._log('log', format.apply(null, arguments));
   }
 
   warn(...args: Array<mixed>) {
