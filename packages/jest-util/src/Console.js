@@ -6,9 +6,8 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @flow
- */
-/* global stream$Writable */
-/* global tty$WriteStream */
+ *
+ * global stream$Writable, tty$WriteStream */
 
 import type {LogType, LogMessage} from 'types/Console';
 
@@ -37,9 +36,10 @@ class CustomConsole extends Console {
 
     // If we can find the width of the console, do so. Default to 80. This
     // value is used to calculate the table width.
-    this._outWidth = 80;
-    if (stdout instanceof tty$WriteStream) {
-      this._outWidth = (stdout: tty$WriteStream).columns;
+    try {
+      this._outWidth = (((stdout: any): tty$WriteStream).columns: number);
+    } catch (e) {
+      this._outWidth = 80;
     }
   }
 
